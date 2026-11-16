@@ -1,0 +1,14 @@
+{
+  "name": "Gas nearby",
+  "short_name": "Gas nearby",
+  "description": "Compare gas prices near you and find the cheapest stop for your car.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffc400",
+  "theme_color": "#ffc400",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon.svg", "sizes": "any", "type": "image/svg+xml"}
+  ]
+}

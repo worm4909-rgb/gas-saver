@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gas nearby</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#ffc400">
+<meta name="apple-mobile-web-app-title" content="Gas nearby">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f4f7;--card:#fff;--ink:#101820;--mute:#5d6b7a;--line:#dde2e8;--acc:#0a5cff;--sign:#ffc400;--signfg:#2a2100;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1118;--card:#141c26;--ink:#eef2f6;--mute:#93a1b1;--line:#263140;--acc:#6f9bff}}
+:root[data-theme="dark"]{--bg:#0b1118;--card:#141c26;--ink:#eef2f6;--mute:#93a1b1;--line:#263140;--acc:#6f9bff}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:520px;margin:0 auto;padding:16px 16px 40px}
+.num{font-family:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;font-weight:700;font-variant-numeric:tabular-nums}
+header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+h1{font-size:22px;margin:0;font-weight:700}
+button{font:inherit;color:var(--ink);cursor:pointer}
+.hero{background:var(--sign);color:var(--signfg);border-radius:20px;padding:18px 20px;margin-bottom:14px}
+.hero .price{font-size:84px;line-height:.95}
+.hero p{margin:4px 0 0}
+.hero small{display:block;opacity:.75;margin-top:8px;font-size:14px}
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:3px;margin-bottom:10px}
+.seg button{flex:1;border:0;background:none;padding:9px 2px;border-radius:11px;font-size:15px}
+.seg button[aria-pressed=true]{background:var(--acc);color:var(--bg);font-weight:600}
+.bar{display:flex;justify-content:space-between;align-items:center;margin:6px 2px 10px;color:var(--mute);font-size:14px}
+.bar button{border:0;background:none;color:var(--acc);padding:4px;font-size:14px}
+.st{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:8px;overflow:hidden}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;border:0;background:none;text-align:left;padding:14px 16px}
+.row b{display:block;font-weight:600}
+.sub{color:var(--mute);font-size:14px}
+.pr{text-align:right;white-space:nowrap}
+.pr .num{font-size:34px;line-height:1}
+.tag{display:inline-block;background:var(--sign);color:var(--signfg);border-radius:6px;font-size:12px;font-weight:700;padding:1px 7px;margin-left:6px;vertical-align:1px}
+.det{border-top:1px solid var(--line);padding:12px 16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:15px}
+.det div{display:flex;justify-content:space-between}
+.det .full{grid-column:1/-1;color:var(--mute);font-size:14px}
+.rep{grid-column:1/-1;display:flex;gap:8px;margin-top:4px}
+.rep input{flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+.rep button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 14px}
+.go{grid-column:1/-1;display:block;text-align:center;text-decoration:none;background:var(--acc);color:var(--bg);font-weight:600;border-radius:12px;padding:12px;margin-top:6px}
+#map{height:300px;border:1px solid var(--line);border-radius:16px;margin-bottom:10px;background-color:var(--card);background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:40px 40px}
+.leaflet-pane,.leaflet-marker-icon,.leaflet-tile-container,.leaflet-pane>svg,.leaflet-pane>canvas,.leaflet-zoom-box,.leaflet-layer{position:absolute;left:0;top:0}
+.leaflet-container{overflow:hidden;touch-action:none;-webkit-tap-highlight-color:transparent}
+.leaflet-container .leaflet-overlay-pane svg{max-width:none!important;max-height:none!important}
+.leaflet-marker-icon{user-select:none;-webkit-user-drag:none}
+.leaflet-pane{z-index:400}.leaflet-overlay-pane{z-index:400}.leaflet-marker-pane{z-index:600}.leaflet-map-pane svg{z-index:200}
+.leaflet-pane>svg path,.leaflet-tile-container{pointer-events:none}
+.leaflet-pane>svg path.leaflet-interactive{pointer-events:auto}
+.leaflet-marker-icon.leaflet-interactive{pointer-events:auto}
+.leaflet-top,.leaflet-bottom{position:absolute;z-index:1000;pointer-events:none}
+.leaflet-top{top:0}.leaflet-right{right:0}.leaflet-bottom{bottom:0}.leaflet-left{left:0}
+.leaflet-control{position:relative;z-index:800;pointer-events:auto;float:left;clear:both}
+.leaflet-right .leaflet-control{float:right}
+.leaflet-left .leaflet-control{margin-left:10px}.leaflet-top .leaflet-control{margin-top:10px}
+.leaflet-zoom-animated{transform-origin:0 0}
+.leaflet-zoom-anim .leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)}
+.leaflet-interactive{cursor:pointer}.leaflet-grab{cursor:grab}.leaflet-dragging .leaflet-grab{cursor:move}
+.leaflet-bar{border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.leaflet-bar a{display:block;width:32px;height:32px;line-height:32px;text-align:center;text-decoration:none;font-size:20px;background:var(--card);color:var(--ink)}
+.leaflet-bar a+a{border-top:1px solid var(--line)}
+.lp{background:none;border:0}
+.lp span{display:block;width:100%;height:100%;text-align:center;border-radius:6px;font:700 15px/22px "Barlow Condensed","Arial Narrow",system-ui,sans-serif;background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:0 1px 3px #0003}
+.lp .low{background:var(--sign);color:var(--signfg);border-color:var(--sign)}
+.lp .off{opacity:.4}
+.lp .you{background:var(--ink);color:var(--card);font:600 12px/20px system-ui,sans-serif;border-radius:999px}
+.cf{display:inline-block;font-size:12px;font-weight:600;border-radius:999px;padding:1px 8px;margin-top:3px;border:1px solid transparent}
+.cf.High{background:#12805c;color:#fff}
+.cf.Medium{background:#ffc400;color:#2a2100}
+.cf.Low{background:#c62828;color:#fff}
+.estbox{border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:14px;color:var(--ink)}
+#mapslot{height:300px;margin-bottom:10px}
+#mapwrap{position:relative;height:100%;border-radius:16px;overflow:hidden}
+#mapwrap #map{margin-bottom:0;height:100%}
+#mapwrap.full{position:fixed;inset:0;z-index:2000;height:auto;border-radius:0;background:var(--bg)}
+#mapwrap.full #map{border:0;border-radius:0}
+#mapwrap.full .leaflet-top{margin-top:env(safe-area-inset-top,0px)}
+#mapwrap.full #rbtn{bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+#fhint{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:900;font-size:12px;background:var(--card);color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:4px 10px;pointer-events:none;white-space:nowrap}
+#mapwrap.full #fhint{display:none}
+#xbtn{position:absolute;right:10px;top:calc(10px + env(safe-area-inset-top,0px));z-index:1100;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 14px;font-size:15px;font-weight:600}
+#msheet{position:absolute;left:10px;right:10px;bottom:calc(54px + env(safe-area-inset-bottom,0px));z-index:1100;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;color:var(--ink)}
+#radar{position:absolute;left:0;top:0;width:0;height:0;border-radius:50%;pointer-events:none;z-index:450;background:radial-gradient(circle,transparent 32%,color-mix(in srgb,var(--acc) 45%,transparent) 32.5%,transparent 33.5%,transparent 65%,color-mix(in srgb,var(--acc) 45%,transparent) 65.5%,transparent 66.5%)}
+#radar.off{display:none}
+#radar i{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0deg,transparent 270deg,color-mix(in srgb,var(--acc) 45%,transparent) 360deg)}
+#radar i::after{content:"";position:absolute;left:50%;top:0;width:2px;height:50%;margin-left:-1px;background:var(--acc)}
+@keyframes sw{to{transform:rotate(360deg)}}
+@keyframes pg{0%{filter:brightness(1.5);box-shadow:0 0 0 0 color-mix(in srgb,var(--acc) 80%,transparent),0 0 16px 4px var(--sign);transform:scale(1.25)}100%{filter:brightness(1);box-shadow:0 0 0 22px transparent,0 0 0 0 transparent;transform:scale(1)}}
+.lp .ping{animation:pg 1.1s ease-out}
+@media (prefers-reduced-motion:reduce){.lp .ping{animation:none}}
+#rbtn{position:absolute;left:10px;bottom:10px;z-index:900;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:14px}
+@media (prefers-reduced-motion:reduce){#radar i{animation:none}}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+</style>
+</head>
+<body>
+<main>
+<header><h1>Gas nearby</h1><span class="sub">McCall, ID</span><button id="gear" aria-expanded="false" aria-controls="set" style="border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:14px">Settings</button></header>
+<div id="set" hidden style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px"><b>Page color</b><div id="sw" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;align-items:center"></div></div>
+<div id="area"></div>
+<section class="hero" id="hero"></section>
+<div id="best"></div>
+<div class="seg" id="seg" role="group" aria-label="Fuel type"></div>
+<div style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-bottom:10px"><label for="rad" style="display:flex;justify-content:space-between"><span>Search distance</span><b id="radt">1.5 mi</b></label><input type="range" id="rad" min="1" max="2.5" step="0.5" value="1.5" style="width:100%;accent-color:var(--acc)"></div>
+<div style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-bottom:10px"><b>Your car</b><div class="rep" style="margin-top:8px"><input type="number" id="tank" step="0.1" min="0" inputmode="decimal" placeholder="Tank size (gal)" aria-label="Tank size in gallons"><input type="number" id="mpg" step="0.1" min="0" inputmode="decimal" placeholder="Miles per gallon" aria-label="Gas mileage in miles per gallon"></div><label for="lvl" style="display:flex;justify-content:space-between;margin-top:8px"><span>Tank level now</span><b id="lvlt">25% full</b></label><input type="range" id="lvl" min="0" max="100" step="5" value="25" style="width:100%;accent-color:var(--acc)"></div>
+<div id="mapslot"><div id="mapwrap"><div id="map" role="group" aria-label="Map of stations in range"></div><div id="radar" aria-hidden="true"><i></i></div><button id="rbtn" aria-pressed="true">Radar on</button><span id="fhint">Tap the map for full screen</span><button id="xbtn" hidden>Close</button><div id="msheet" hidden></div></div></div>
+<div class="bar"><span id="count"></span><button id="sort"></button></div>
+<div id="list"></div>
+<p class="sub" style="margin-top:14px">Maverik’s prices come from its own website, with no update time shown. Shell and Sinclair prices come from an online directory with no date, and they differ from Maverik’s by more than 50 cents, so they’re marked unverified. Tap a station and enter what you see at the pump to replace them. Confidence is high for prices you entered today, medium for a station’s own website or prices you entered in the last 3 days, and low for undated or older prices. Map tiles © OpenStreetMap contributors. Pins are estimated until you add exact coordinates.</p>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+const FUELS=["Regular","Midgrade","Premium","Diesel"];
+const S=[
+{id:0,name:"Maverik",addr:"622 N 3rd St",mi:.9,ang:300,p:[4.65,5.05,5.15,5.73],src:"Maverik website"},
+{id:1,name:"Shell",addr:"507 N 3rd St",mi:1,ang:20,p:[4.00,4.19,4.39,3.99],unv:1,src:"an online business directory (date unknown)"},
+{id:2,name:"Chevron",addr:"1600 E Lake St",mi:.9,ang:70,p:[4.00,3.88,null,3.99],unv:1,src:"directory listings for a Chevron on Lake St (date unknown)"},
+{id:3,name:"Sinclair",addr:"147 N 3rd St",mi:1.1,ang:345,p:[4.00,null,null,null],unv:1,src:"an online business directory (date unknown)"},
+{id:4,name:"Aspen Market",addr:"1611 Davis Ave",mi:1.5,ang:100,p:[null,null,null,null]}];
+S.forEach(s=>{s.ang*=Math.PI/180;s.t=[null,null,null,null]});
+let fuel=0,sort="price",open=null,rad=1.5,R={},car={tank:0,mpg:0,lvl:25};try{Object.assign(car,JSON.parse(localStorage.getItem("gascar")||"{}"))}catch(e){}
+try{R=JSON.parse(localStorage.getItem("gasreports")||"{}")}catch(e){}
+S.forEach(s=>FUELS.forEach((f,i)=>{const r=R[s.id+"-"+i];if(r){s.p[i]=r.p;s.t[i]=r.t}}));
+const $=id=>document.getElementById(id);
+const CEN=[44.91,-116.12];
+S.forEach(s=>{s.ll=s.ll||[CEN[0]-Math.sin(s.ang)*s.mi/69,CEN[1]+Math.cos(s.ang)*s.mi/(69*Math.cos(CEN[0]*Math.PI/180))]});
+let M=null,LG=null,RC=null;
+function initMap(){
+ if(!window.L){$("map").innerHTML='<p class="sub" style="padding:16px">The map library didn’t load.</p>';return}
+ M=L.map("map",{minZoom:11,maxZoom:17}).setView(CEN,13);
+ L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:17,attribution:"© OpenStreetMap contributors"}).addTo(M);
+ LG=L.layerGroup().addTo(M);M.on("move zoom viewreset resize",placeRadar);M.on("click",()=>{if($("mapwrap").classList.contains("full"))$("msheet").hidden=true;else setFull(true)});fitRad();
+}
+function fitRad(){if(!M)return;if(RC)M.removeLayer(RC);const ac=getComputedStyle(document.documentElement).getPropertyValue("--acc").trim()||"#0a5cff";RC=L.circle(CEN,{radius:rad*1609.34,color:ac,weight:2,fillOpacity:.1,interactive:false}).addTo(M);M.fitBounds(RC.getBounds(),{padding:[8,8]});placeRadar()}
+function drawLeaflet(V,low){
+ if(!M)return;LG.clearLayers();MK=[];
+ L.marker(CEN,{icon:L.divIcon({className:"lp",html:'<span class="you">You</span>',iconSize:[44,22],iconAnchor:[22,11]}),interactive:false,keyboard:false}).addTo(LG);
+ S.forEach(s=>{const on=V.includes(s),t=pf(s.p[fuel]),isL=low&&low.id===s.id;
+  const m=L.marker(s.ll,{keyboard:on,title:s.name+" "+t,icon:L.divIcon({className:"lp",html:`<span class="pin${isL?" low":""}${on?"":" off"}">${t}</span>`,iconSize:[52,24],iconAnchor:[26,12]})}).addTo(LG);
+  if(on){MK.push({s,m});m.on("click",()=>{if($("mapwrap").classList.contains("full")){$("msheet").hidden=false;$("msheet").innerHTML=`<b>${s.name}</b> · ${pf(ep(s,fuel))}<div class="sub">${s.mi} mi · ${s.addr}</div><a target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;text-decoration:none;margin-top:8px;background:var(--acc);color:var(--bg);font-weight:600;border-radius:12px;padding:10px" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(s.name+", "+s.addr+", McCall, ID")}">Get directions in Google Maps</a>`}else{open=s.id;render()}})}
+ });
+}
+const pf=v=>v==null?"—":"$"+v.toFixed(2);
+const info=(s,i)=>s.t[i]?"you entered this on "+new Date(s.t[i]).toLocaleDateString(undefined,{month:"short",day:"numeric"}):s.p[i]!=null?(s.unv?"unverified, from ":"from the ")+s.src:"no price yet";
+const cmp=(a,b)=>(ep(a,fuel)??1e9)-(ep(b,fuel)??1e9)||a.mi-b.mi;
+function conf(s,i){if(s.p[i]==null)return null;if(s.t[i]){const d=(Date.now()-s.t[i])/864e5;return d<1?["High","you entered it today"]:d<4?["Medium","you entered it "+Math.floor(d)+" days ago"]:["Low","you entered it more than 3 days ago"]}if(s.unv)return["Low","an undated directory listing that disagrees with other sources"];return["Medium","it’s from the station’s own website, but no update time is shown"]}
+const cb=(s,i)=>{const c=conf(s,i);return c?`<span class="cf ${c[0]}">${c[0]} confidence</span>`:""};
+let SM=null,DS={};try{DS=JSON.parse(localStorage.getItem("gasdisc")||"{}")}catch(e){}const EST={};
+const ep=(s,i)=>s.p[i]==null?null:Math.max(0,+(s.p[i]-(DS[s.id]||0)).toFixed(3));
+const dLine=s=>DS[s.id]&&s.p[fuel]!=null?`<br><span class="sub" style="color:var(--ink)"><b class="num" style="font-size:20px">$${ep(s,fuel).toFixed(2)}</b> with discount</span>`:"";
+function setDisc(id){const v=parseFloat($("dc"+id).value);if(v>0)DS[id]=+v.toFixed(2);else delete DS[id];try{localStorage.setItem("gasdisc",JSON.stringify(DS))}catch(e){}render()}
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const estLine=s=>{const e=EST[s.id+"-"+fuel];return e&&e.busy?`<br><span class="sub">Estimating…</span>`:e&&e.price?`<br><span class="sub" style="color:var(--ink)"><b class="num" style="font-size:20px">~$${e.price.toFixed(2)}</b> estimate</span>`:""};
+function estUI(s){const e=EST[s.id+"-"+fuel];return `<div class="rep"><button data-est="${s.id}" style="flex:1"${e&&e.busy?" disabled":""}>${e&&e.busy?"Estimating…":"Estimate the price now"}</button></div>${e&&e.text?`<div class="full estbox">${e.text}</div>`:""}`}
+async function estimate(id){
+ const s=S[id],k=id+"-"+fuel;EST[k]={busy:1};render();
+ const rows=S.map(x=>`${x.name} (${x.addr}, ${x.mi} mi): ${FUELS[fuel]} ${x.p[fuel]==null?"no price":"$"+x.p[fuel].toFixed(2)+" ["+conf(x,fuel)[0]+" confidence: "+conf(x,fuel)[1]+"]"}`).join("\n");
+ const prompt=`You cannot browse the web. Using only the data below from a gas price app in McCall, Idaho, estimate today's ${FUELS[fuel]} price in dollars per gallon at ${s.name} (${s.addr}). Stations in one small town usually price within a few cents of each other; treat low confidence data as weak. Data:\n${rows}\nReply with only JSON: {"price": number, "low": number, "high": number, "why": "one or two short sentences"}`;
+ try{const r=await SM.json(prompt,{modelTier:"quick"});if(![r.price,r.low,r.high].every(v=>isFinite(+v)))throw 0;EST[k]={price:+r.price,text:`Estimate: <b>$${(+r.price).toFixed(2)}</b> per gallon, likely between $${(+r.low).toFixed(2)} and $${(+r.high).toFixed(2)}. ${esc(r.why)}<br><i>A guess from the data in this app, not live research.</i>`}}
+ catch(e){EST[k]={text:e&&e.code==="not_granted"?"Claude wasn’t allowed to run.":"Couldn’t get an estimate. Try again."}}
+ render();
+}
+const PAL=[["Default",null],["Sky","#dbeafe"],["Mint","#d3f2e2"],["Lavender","#e5dffa"],["Rose","#fde0e7"],["Sand","#f0e6d2"],["Night","#0e1424"],["Forest","#10281f"]];
+let BG=null;try{BG=localStorage.getItem("gasbg")||null}catch(e){}
+function setVars(c){
+ const r=document.documentElement.style;
+ ["--bg","--card","--ink","--mute","--line","--acc"].forEach(p=>r.removeProperty(p));
+ if(c){const n=parseInt(c.slice(1),16),l=(.299*(n>>16)+.587*((n>>8)&255)+.114*(n&255))/255;
+  r.setProperty("--bg",c);
+  if(l<.5){r.setProperty("--card",`color-mix(in srgb,${c} 85%,#fff)`);r.setProperty("--ink","#eef2f6");r.setProperty("--mute","#a9b6c6");r.setProperty("--line","rgba(255,255,255,.22)");r.setProperty("--acc","#8ea4ff")}
+  else{r.setProperty("--card","#fff");r.setProperty("--ink","#101820");r.setProperty("--mute","#4d5b6a");r.setProperty("--line","rgba(16,24,32,.16)");r.setProperty("--acc","#0a5cff")}}
+ if(RC)RC.setStyle({color:getComputedStyle(document.documentElement).getPropertyValue("--acc").trim()});
+}
+function applyBg(c){setVars(c);BG=c;try{c?localStorage.setItem("gasbg",c):localStorage.removeItem("gasbg")}catch(e){}drawSw()}
+function drawSw(){
+ $("sw").innerHTML=PAL.map(([n,c])=>{const on=(BG||"")===(c||"");return `<button data-c="${c||""}" aria-label="${n}" aria-pressed="${on}" title="${n}" style="width:38px;height:38px;border-radius:50%;padding:0;border:3px solid ${on?"var(--acc)":"var(--line)"};background:${c||"linear-gradient(135deg,#f2f4f7 50%,#0b1118 50%)"}"></button>`}).join("")+`<input type="color" id="cc" value="${BG||"#f2f4f7"}" aria-label="Pick any color" style="width:38px;height:38px;border:0;padding:0;background:none">`;
+ $("sw").querySelectorAll("button").forEach(b=>b.onclick=()=>applyBg(b.dataset.c||null));
+ $("cc").oninput=e=>setVars(e.target.value);
+ $("cc").onchange=e=>applyBg(e.target.value);
+}
+let RAD=true;try{const v=localStorage.getItem("gasradar");RAD=v===null?!matchMedia("(prefers-reduced-motion:reduce)").matches:v==="1"}catch(e){}
+function placeRadar(){
+ const r=$("radar");if(!M||!r)return;
+ const p=M.latLngToContainerPoint(CEN),e=M.latLngToContainerPoint([CEN[0],CEN[1]+rad/(69*Math.cos(CEN[0]*Math.PI/180))]),R=Math.abs(e.x-p.x);
+ r.style.left=(p.x+1-R)+"px";r.style.top=(p.y+1-R)+"px";r.style.width=r.style.height=(2*R)+"px";
+ r.classList.toggle("off",!RAD);
+ $("rbtn").textContent="Radar "+(RAD?"on":"off");$("rbtn").setAttribute("aria-pressed",RAD);
+}
+let MK=[];const RM=(()=>{try{return matchMedia("(prefers-reduced-motion:reduce)").matches}catch(e){return false}})();
+let lastA=0;const t0=performance.now();
+function radarLoop(now){
+ requestAnimationFrame(radarLoop);
+ if(!M||!RAD||RM)return;
+ const a=((now-t0)/4000*360)%360,rot=$("radar").firstElementChild;
+ if(rot)rot.style.transform="rotate("+a+"deg)";
+ const p=M.latLngToContainerPoint(CEN);
+ MK.forEach(({s,m})=>{const q=M.latLngToContainerPoint(s.ll),th=(Math.atan2(q.x-p.x,-(q.y-p.y))*180/Math.PI+360)%360,hit=lastA<=a?(th>lastA&&th<=a):(th>lastA||th<=a);
+  if(hit){const el=m.getElement(),sp=el&&el.firstElementChild;if(sp){sp.classList.remove("ping");void sp.offsetWidth;sp.classList.add("ping")}}});
+ lastA=a;
+}
+function setFull(on){const w=$("mapwrap");w.classList.toggle("full",on);$("xbtn").hidden=!on;$("msheet").hidden=true;document.body.style.overflow=on?"hidden":"";if(on)$("xbtn").focus();if(M)setTimeout(()=>{M.invalidateSize();fitRad()},60)}
+const REF={price:4.86,date:"2026-09-21",label:"Idaho average for regular (AAA, reported by Idaho news)"};
+function areaCard(V){
+ const P=V.filter(s=>s.p[fuel]!=null),el=$("area");
+ if(!P.length){el.innerHTML="";return}
+ const ps=P.map(s=>s.p[fuel]),avg=ps.reduce((a,b)=>a+b,0)/ps.length,lo=Math.min(...ps),hi=Math.max(...ps),weak=P.filter(s=>conf(s,fuel)[0]==="Low").length;
+ let tag="",cs="",note=" There’s no state average to compare this fuel with.";
+ if(fuel===0){const d=avg-REF.price,age=Math.round((Date.now()-new Date(REF.date+"T12:00:00"))/864e5);tag=d<=-.1?"look good":d>=.1?"look high":"are about average";cs=d<=-.1?"background:#12805c;color:#fff;border-color:#12805c":d>=.1?"background:#c62828;color:#fff;border-color:#c62828":"background:#ffc400;color:#2a2100;border-color:#ffc400";note=` The ${REF.label} was $${REF.price.toFixed(2)} on ${new Date(REF.date+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"})}. That’s ${age} days old, so this comparison is rough.`}
+ el.innerHTML=`<div class="st" style="padding:12px 16px;margin-bottom:10px;${cs}"><b>Prices near you${tag?" "+tag:""}</b><div class="sub" style="color:inherit;opacity:.92">Average ${FUELS[fuel].toLowerCase()} is $${avg.toFixed(2)} across ${P.length} station${P.length>1?"s":""}, from $${lo.toFixed(2)} to $${hi.toFixed(2)}.${weak?` ${weak} of these ${weak>1?"are":"is"} low confidence.`:""}${note}</div></div>`;
+}
+function calc(s){const p=ep(s,fuel);if(p==null||!(car.tank>0)||!(car.mpg>0))return null;const g=car.tank*(1-car.lvl/100),fill=g*p,trip=2*s.mi/car.mpg*p;return{g,fill,trip,total:fill+trip}}
+const cmpT=(a,b)=>(calc(a)?.total??1e9)-(calc(b)?.total??1e9)||a.mi-b.mi;
+function render(){
+ const V=S.filter(s=>s.mi<=rad),P=V.filter(s=>s.p[fuel]!=null).sort(cmp),low=P[0];
+ $("hero").innerHTML=low?`<div class="num price">${pf(ep(low,fuel))}</div><p><b>${low.name}</b>, ${low.mi} mi away</p><small>Lowest ${FUELS[fuel].toLowerCase()} price we have in range${DS[low.id]?" after your discount":""}${" · "+conf(low,fuel)[0].toLowerCase()+" confidence"}${P.length>1?" · average "+pf(P.reduce((t,s)=>t+ep(s,fuel),0)/P.length):""}</small>`:`<div class="num price">No price</div><p>No ${FUELS[fuel].toLowerCase()} price yet in range</p><small>Tap a station and enter what you see at the pump.</small>`;
+ $("seg").innerHTML=FUELS.map((f,i)=>`<button aria-pressed="${i===fuel}" data-f="${i}">${f}</button>`).join("");
+ $("seg").querySelectorAll("button").forEach(b=>b.onclick=()=>{fuel=+b.dataset.f;render()});
+ $("count").textContent=V.length+(V.length===1?" station":" stations")+" within "+rad+" mi";
+ $("sort").textContent="Sorted by "+{price:"price",dist:"distance",total:"total cost"}[sort];
+ drawLeaflet(V,low);areaCard(V);
+ const C=V.filter(s=>calc(s)).sort(cmpT),bt=C[0];
+ $("best").innerHTML=bt?`<div class="st" style="padding:12px 16px;margin-bottom:10px;border-color:var(--acc)"><b>Cheapest for your car: ${bt.name}</b><div class="sub">$${calc(bt).total.toFixed(2)} total · ${calc(bt).g.toFixed(1)} gal to fill ($${calc(bt).fill.toFixed(2)}) plus $${calc(bt).trip.toFixed(2)} of gas to drive there and back${DS[bt.id]?" · includes your $"+DS[bt.id].toFixed(2)+" per gallon discount":""}${" · "+conf(bt,fuel)[0].toLowerCase()+" confidence in this price"}</div></div>`:"";
+ const L=V.slice().sort(sort==="price"?cmp:sort==="total"?cmpT:(a,b)=>a.mi-b.mi);
+ $("list").innerHTML=L.map(s=>{const o=open===s.id;
+  return `<div class="st"><button class="row" aria-expanded="${o}" data-id="${s.id}"><span><b>${s.name}${low&&s.id===low.id?'<span class="tag">Lowest</span>':""}${bt&&s.id===bt.id?'<span class="tag">Best for you</span>':""}</b><span class="sub">${s.mi} mi · ${s.addr}${s.unv&&!s.t[fuel]&&s.p[fuel]!=null?" · unverified":""}${calc(s)?" · $"+calc(s).total.toFixed(2)+" total":""}</span></span><span class="pr"><span class="num">${pf(s.p[fuel])}</span>${cb(s,fuel)?"<br>"+cb(s,fuel):""}${dLine(s)}${estLine(s)}</span></button>
+  ${o?`<div class="det">${FUELS.map((f,i)=>`<div><span>${f}</span><b class="num" style="font-size:20px">${pf(s.p[i])}</b></div>`).join("")}<div class="full">${FUELS[fuel]}: ${info(s,fuel)}${conf(s,fuel)?". Confidence is "+conf(s,fuel)[0].toLowerCase()+" because "+conf(s,fuel)[1]+".":""}</div><div class="full" style="display:block"><label for="dc${s.id}" style="display:flex;justify-content:space-between"><span>Your discount per gallon</span><b id="dcl${s.id}">${DS[s.id]?"$"+DS[s.id].toFixed(2)+" off":"None"}</b></label><input type="range" id="dc${s.id}" min="0" max="1" step="0.05" value="${DS[s.id]||0}" style="width:100%;accent-color:var(--acc)"></div>${SM?estUI(s):""}<div class="rep"><input type="number" step="0.01" min="0" inputmode="decimal" id="in${s.id}" placeholder="${FUELS[fuel]} price (pump or Google Maps)" aria-label="${FUELS[fuel]} price at ${s.name}"><button data-rep="${s.id}">Save price</button></div><a class="go" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(s.name+", "+s.addr+", McCall, ID")}">Get directions in Google Maps</a></div>`:""}</div>`}).join("");
+ $("list").querySelectorAll(".row").forEach(b=>b.onclick=()=>{open=open===+b.dataset.id?null:+b.dataset.id;render()});
+ $("list").querySelectorAll("[data-est]").forEach(b=>b.onclick=()=>estimate(+b.dataset.est));
+ $("list").querySelectorAll("input[id^=dc]").forEach(r=>{const id=+r.id.slice(2);r.oninput=()=>{$("dcl"+id).textContent=+r.value?"$"+(+r.value).toFixed(2)+" off":"None"};r.onchange=()=>setDisc(id)});
+ $("list").querySelectorAll("[data-rep]").forEach(b=>{const id=+b.dataset.rep,go=()=>rep(id);b.onclick=go;$("in"+id).onkeydown=e=>{if(e.key==="Enter")go()}});
+}
+function rep(id){const v=parseFloat($("in"+id).value);if(!(v>0&&v<20))return;const s=S[id];s.p[fuel]=+v.toFixed(2);s.t[fuel]=Date.now();R[id+"-"+fuel]={p:s.p[fuel],t:s.t[fuel]};try{localStorage.setItem("gasreports",JSON.stringify(R))}catch(e){}render()}
+function drawMap(V,low){const K=56,ids=new Set(V.map(s=>s.id));let g=`<rect width="320" height="300" style="fill:var(--card)"/><path d="M0 210L320 90M60 0L260 300M0 60L320 250" style="stroke:var(--line);stroke-width:7;fill:none;stroke-linecap:round"/>`;for(let m=1;m<=5;m++)g+=`<circle cx="160" cy="150" r="${m*K/2}" style="fill:none;stroke:var(--line);stroke-dasharray:3 4"/>`;g+=`<circle cx="160" cy="150" r="${rad*K}" style="fill:var(--acc);fill-opacity:.12;stroke:var(--acc);stroke-width:2"/>`;S.forEach(s=>{const x=+(160+Math.cos(s.ang)*s.mi*K).toFixed(1),y=+(150+Math.sin(s.ang)*s.mi*K).toFixed(1),t=pf(s.p[fuel]);if(!ids.has(s.id)){g+=`<circle cx="${x}" cy="${y}" r="4" style="fill:var(--mute);opacity:.4"/>`;return}const L=low&&s.id===low.id;g+=`<g data-id="${s.id}" tabindex="0" role="button" aria-label="${s.name} ${t}" style="cursor:pointer"><circle cx="${x}" cy="${y}" r="6" style="fill:${L?"var(--sign)":"var(--acc)"};stroke:var(--card);stroke-width:2"/><rect x="${x-21}" y="${y-29}" width="42" height="17" rx="5" style="fill:${L?"var(--sign)":"var(--card)"};stroke:var(--line)"/><text x="${x}" y="${y-16}" text-anchor="middle" style="font:700 14px 'Barlow Condensed',system-ui,sans-serif;fill:${L?"var(--signfg)":"var(--ink)"}">${t}</text></g>`});g+=`<circle cx="160" cy="150" r="7" style="fill:var(--ink);stroke:var(--card);stroke-width:3"/><text x="160" y="170" text-anchor="middle" style="font:600 12px system-ui;fill:var(--mute)">You</text>`;$("map").innerHTML=g;$("map").querySelectorAll("[data-id]").forEach(e=>{const go=()=>{open=+e.dataset.id;render()};e.onclick=go;e.onkeydown=k=>{if(k.key==="Enter")go()}})}
+$("sort").onclick=()=>{sort=sort==="price"?"dist":sort==="dist"?"total":"price";render()};
+$("rad").oninput=e=>{rad=+e.target.value;$("radt").textContent=rad+" mi";fitRad();render()};
+$("tank").value=car.tank||"";$("mpg").value=car.mpg||"";$("lvl").value=car.lvl;$("lvlt").textContent=car.lvl+"% full";
+const sv=()=>{try{localStorage.setItem("gascar",JSON.stringify(car))}catch(e){}render()};
+$("tank").oninput=e=>{car.tank=parseFloat(e.target.value)||0;sv()};
+$("mpg").oninput=e=>{car.mpg=parseFloat(e.target.value)||0;sv()};
+$("lvl").oninput=e=>{car.lvl=+e.target.value;$("lvlt").textContent=car.lvl+"% full";sv()};
+$("gear").onclick=()=>{const h=$("set").hidden;$("set").hidden=!h;$("gear").setAttribute("aria-expanded",h)};
+$("rbtn").onclick=()=>{RAD=!RAD;try{localStorage.setItem("gasradar",RAD?"1":"0")}catch(e){}placeRadar()};
+$("xbtn").onclick=()=>setFull(false);document.addEventListener("keydown",e=>{if(e.key==="Escape")setFull(false)});
+applyBg(BG);initMap();placeRadar();render();requestAnimationFrame(radarLoop);
+if(window.claude&&claude.use)claude.use("sample").then(f=>{if(f){SM=f;render()}}).catch(()=>{});
+</script>
+</body>
+</html>
